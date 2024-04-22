@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy 
 from flask_migrate import Migrate
 from sqlalchemy import Enum
+from sqlalchemy import func
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -22,7 +23,9 @@ class User(db.Model):
     email = db.Column(db.String(255), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
     user_type = db.Column(db.String(255), nullable=False)
-
+    created_at = db.Column(db.TIMESTAMP(timezone=True), default=func.current_timestamp())
+    updated_at = db.Column(db.TIMESTAMP(timezone=True), default=func.current_timestamp(), onupdate=func.current_timestamp())
+    
     def is_active(self):
         return True
     def get_id(self):
@@ -37,7 +40,9 @@ class Company(db.Model):
     detail_company = db.Column(db.Text, nullable=False)
     number = db.Column(db.String(25), nullable=False)
     country = db.Column(db.String(255), nullable=False)
-    
+    created_at = db.Column(db.TIMESTAMP(timezone=True), default=func.current_timestamp())
+    updated_at = db.Column(db.TIMESTAMP(timezone=True), default=func.current_timestamp(), onupdate=func.current_timestamp())
+
     jobs = db.relationship('Job', backref='company', lazy=True)
 
 class Jobseeker(db.Model):
@@ -51,6 +56,8 @@ class Jobseeker(db.Model):
     exprience = db.Column(db.Integer, nullable=True)
     name_company = db.Column(db.String(255), nullable=True)
     field_work = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.TIMESTAMP(timezone=True), default=func.current_timestamp())
+    updated_at = db.Column(db.TIMESTAMP(timezone=True), default=func.current_timestamp(), onupdate=func.current_timestamp())
 
     timeline = db.relationship('Timeline', uselist=False, backref='jobseeker', lazy=True)
 
@@ -63,12 +70,16 @@ class Job(db.Model):
     major = db.Column(db.String(255), nullable=False, default='Unknown')
     date_posted = db.Column(db.Date, nullable=False)
     last_application = db.Column(db.Date, nullable=True)
+    created_at = db.Column(db.TIMESTAMP(timezone=True), default=func.current_timestamp())
+    updated_at = db.Column(db.TIMESTAMP(timezone=True), default=func.current_timestamp(), onupdate=func.current_timestamp())
 
 class Timeline(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     id_job = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
     id_jobseeker = db.Column(db.Integer, db.ForeignKey('jobseeker.id'), nullable=False)
     apply_job = db.Column(Enum('pending', 'approved', 'rejected', name='apply_job_enum'), nullable=False, default='pending')
+    created_at = db.Column(db.TIMESTAMP(timezone=True), default=func.current_timestamp())
+    updated_at = db.Column(db.TIMESTAMP(timezone=True), default=func.current_timestamp(), onupdate=func.current_timestamp())
 
     job = db.relationship('Job', backref='timeline', lazy=True)
 
@@ -123,7 +134,9 @@ def get_user():
         'username' : data.username,
         'email' : data.email,
         'password' : data.password,
-        'user_type' : data.user_type
+        'user_type' : data.user_type,
+        'created_at' : data.created_at,
+        'updated_at' : data.updated_at
         } for data in User.query.all()
     ]
     return jsonify(data)
@@ -175,7 +188,9 @@ def get_search():
                 'id': jobseeker.id,
                 'name': jobseeker.name,
                 'major': jobseeker.major,
-                'age': jobseeker.age
+                'age': jobseeker.age,
+                'created_at': jobseeker.created_at,
+                'updated_at': jobseeker.updated_at
                 # 'address': jobseeker.address,
                 # 'number': jobseeker.number,
                 # 'exprience': jobseeker.exprience,
@@ -215,7 +230,9 @@ def get_company():
             'name_company': data.name,
             'detail_company': data.detail_company,
             'number': data.number,
-            'country': data.country
+            'country': data.country,
+            'created_at': data.created_at,
+            'updated_at': data.updated_at
             } for data in Company.query.all()
         ]
         return jsonify(data)
@@ -260,7 +277,9 @@ def get_jobseeker():
             'number': data.number,
             'exprience': data.exprience,
             'name_company': data.name_company,
-            'field_work': data.field_work
+            'field_work': data.field_work,
+            'created_at': data.created_at,
+            'updated_at': data.updated_at
             } for data in Jobseeker.query.all()
         ]
         return jsonify(data)
@@ -353,7 +372,9 @@ def get_jobs(id):
                 'details': company.detail_company,
                 'number': company.number,
                 'country': company.country
-            }
+            },
+            'created_at': job.created_at,
+            'updated_at': job.updated_at
         } 
         return jsonify(data)
     else:
@@ -375,7 +396,9 @@ def get_job():
                     'exprience': job.exprience,
                     'major': job.major,
                     'date_posted': job.date_posted.strftime('%d-%m-%Y'),
-                    'last_application': job.last_application.strftime('%d-%m-%Y') if job.last_application else None
+                    'last_application': job.last_application.strftime('%d-%m-%Y') if job.last_application else None,
+                    'created_at': job.created_at,
+                    'updated_at': job.updated_at
                 }
                 for job in jobs
             ]
@@ -420,7 +443,9 @@ def get_timeline():
             'id': data.id,
             'id_job': data.id_job,
             'id_jobseeker' : data.id_jobseeker,
-            'apply_job' : data.apply_job
+            'apply_job' : data.apply_job,
+            'created_at' : data.created_at,
+            'updated_at' : data.updated_at
         } for data in Timeline.query.all()
     ]
     return jsonify(data)
@@ -444,7 +469,9 @@ def get_list_job():
             'company': {
                 'name': job.company.name,
                 'country': job.company.country
-            }
+            },
+            'created_at': job.created_at,
+            'updated_at': job.updated_at
         })
     return {'job': list_job}
 @app.route('/search-job/', methods=['GET'])
@@ -473,7 +500,9 @@ def get_search_job():
             'company': {
                 'name': job.company.name,
                 'country': job.company.country,
-            }
+            },
+            'created_at': job.created_at,
+            'updated_at': job.updated_at
         }
         search_results.append(list_job)
     return jsonify(search_results)
@@ -498,7 +527,9 @@ def get_detail_job(id):
             'details': job.company.detail_company,
             'number': job.company.number,
             'country': job.company.country
-        }
+        },
+        'created_at': job.created_at,
+        'updated_at': job.updated_at
     } 
     return jsonify(data)
 
@@ -565,8 +596,9 @@ def get_apply_job():
                         'name': timeline.job.company.name,
                         'country' : timeline.job.company.country
                     }
-                }
-                
+                },
+                'created_at': timeline.created_at,
+                'updated_at': timeline.updated_at
             }) 
         return {'apply_job': list_timeline}
     
@@ -604,7 +636,9 @@ def get_report_jobseeker(id_jobseeker):
             'number': jobseeker.number,
             'exprience': jobseeker.exprience,
             'name_company': jobseeker.name_company,
-            'field_Work': jobseeker.field_work
+            'field_Work': jobseeker.field_work,
+            'created_at': jobseeker.created_at,
+            'updated_at': jobseeker.updated_at
         })
 
     return jsonify({'jobseeker': list_jobseeker})
@@ -634,7 +668,9 @@ def company_jobs(company_id):
                     'number': timeline.jobseeker.number,
                     'exprience': timeline.jobseeker.exprience,
                     'name_company': timeline.jobseeker.name_company,
-                    'field_work': timeline.jobseeker.field_work
+                    'field_work': timeline.jobseeker.field_work,
+                    'created_at': timeline.jobseeker.created_at,
+                    'updated_at': timeline.jobseeker.updated_at
                 })
 
             #data pekerjaan dan jumlah jobseeker yang melamar
@@ -646,7 +682,9 @@ def company_jobs(company_id):
                 'date_posted': job.date_posted.strftime('%d-%m-%Y'),
                 'major': job.major,
                 'total_worker': total_worker,
-                'jobseekers': jobseeker_data
+                'jobseekers': jobseeker_data,
+                'created_at': job.created_at,
+                'updated_at': job.updated_at
             }
             jobs_data.append(job_data)
 
