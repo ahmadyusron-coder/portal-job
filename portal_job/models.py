@@ -16,9 +16,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 migrate = Migrate(app, db)
+
 class User(db.Model):
-
-
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(255), nullable=False, unique=True)
     email = db.Column(db.String(255), nullable=False, unique=True)

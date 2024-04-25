@@ -10,6 +10,36 @@ from portal_job.routes.user_management import *
 from portal_job.routes.job_management import *
 from portal_job.routes.timeline import *
 from portal_job.routes.reporting import *
+from flask import Flask, render_template, flash, redirect, url_for
+
+app = Flask(__name__)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        user_type = request.form['user_type']
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('Username already exists', 'error')
+        else:
+            new_user = User(username=username, email=email, password=password, user_type=user_type)
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Registration successful. Please log in.', 'success')
+            return redirect(url_for('login'))
+    return render_template('register/register.html')
+
+@app.route('/register/company', methods=['GET'])
+def register_company_page():
+    return render_template('register/register_company.html')
+
+@app.route('/register/jobseeker', methods=['GET'])
+def register_jobseeker_page():
+    return render_template('register/register_jobseeker.html')
+
 # app = Flask(__name__)
 
 # app.config['SECRET_KEY'] = 'secret'
