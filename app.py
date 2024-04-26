@@ -5,14 +5,16 @@ from flask import Flask, request, jsonify
 # from sqlalchemy import func
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
-from portal_job.models import *
+from portal_job.models import app
 from portal_job.routes.user_management import *
 from portal_job.routes.job_management import *
 from portal_job.routes.timeline import *
 from portal_job.routes.reporting import *
 from flask import Flask, render_template, flash, redirect, url_for
 
-app = Flask(__name__)
+# app = Flask(__name__)
+
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():

@@ -9,7 +9,9 @@ from flask_login import LoginManager
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'secret'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123@localhost/portal-job'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123@localhost/portal-job' #ganti jadi migrations jadi migrations untuk aktifkan 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://default:wP7STrxA9nKe@ep-shrill-cell-a468mwqu.us-east-1.aws.neon.tech:5432/verceldb?sslmode=require'
+
 db = SQLAlchemy(app)
 
 login_manager = LoginManager()
